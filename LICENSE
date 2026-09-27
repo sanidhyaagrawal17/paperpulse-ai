@@ -1,0 +1,14 @@
+RESTRICTED RESEARCH & EVALUATION LICENSE
+Copyright (c) 2026 Sanidhya Agrawal. All rights reserved.
+
+This source code, repository, software architecture, and documentation (the "Software") are provided solely and strictly for the personal review, academic audit, and technical evaluation by interviewers, hiring managers, and prospective employers.
+
+PERMITTED USES:
+1. You may view, clone, and run the Software locally on your own machine solely for the purpose of technical evaluation, candidate assessment, and code review.
+
+PROHIBITED USES:
+1. COMMERCIAL USE: Any commercial use, redistribution, sublicensing, leasing, selling, or integration into commercial software or software-as-a-service (SaaS) offerings is strictly prohibited without explicit written permission from the copyright holder.
+2. PUBLIC REDISTRIBUTION & FORKING: Modifying and republishing this code as your own work or incorporating substantial portions into third-party repositories without attribution and non-commercial restrictions is prohibited.
+3. DATA HARVESTING: Automated extraction, scraping, or re-indexing of the curated vector embeddings and research assets for external commercial dataset curation is prohibited.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
