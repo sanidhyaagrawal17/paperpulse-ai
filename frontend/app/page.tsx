@@ -658,7 +658,7 @@ export default function Home() {
                       ChromaDB Vector Store Catalog
                     </h3>
                     <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                      1,536-DIM HNSW
+                      384-DIM HNSW
                     </span>
                   </div>
                   <p className="text-[11px] text-zinc-400">
@@ -816,7 +816,7 @@ export default function Home() {
                           </p>
                           <div className="flex flex-wrap items-center gap-1.5 mt-2">
                             <span className="px-2 py-0.5 rounded text-[9.5px] font-mono bg-indigo-950/70 text-indigo-300 border border-indigo-500/40">
-                              1,536-dim embedding
+                              384-dim embedding
                             </span>
                             <span className="px-2 py-0.5 rounded text-[9.5px] font-mono bg-emerald-950/70 text-emerald-300 border border-emerald-500/40">
                               ChromaDB HNSW

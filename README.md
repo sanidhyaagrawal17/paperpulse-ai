@@ -1,13 +1,13 @@
-# PaperPulse AI: Academic Research Intelligence & Deterministic Literature Synthesis
+# PaperPulse AI: Academic Research Assistant & Citation Grounding Engine
 
-[![License: Proprietary / Evaluator Review Only](https://img.shields.io/badge/License-Interviewer_Review_Only-red.svg)](LICENSE)
+[![License: Non-Commercial Review Only](https://img.shields.io/badge/License-Evaluator_Review_Only-red.svg)](LICENSE)
 [![Next.js 14](https://img.shields.io/badge/Frontend-Next.js%2014%20App%20Router-black?logo=next.js)](https://nextjs.org/)
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI%200.110-009688?logo=fastapi)](https://fastapi.tiangolo.com/)
 [![ChromaDB](https://img.shields.io/badge/Vector_DB-ChromaDB%20HNSW-orange)](https://www.trychroma.com/)
 [![NetworkX](https://img.shields.io/badge/Graph_Topology-NetworkX-blue)](https://networkx.org/)
 [![Status](https://img.shields.io/badge/Build-Passing-brightgreen)]()
 
-> **PaperPulse AI** is a production-grade academic research intelligence and literature review engine. It ingests scientific papers directly from the arXiv API, indexes 1,536-dimensional abstract embeddings into a local **ChromaDB** HNSW vector core, expands citation communities via **NetworkX** topological graph algorithms, and synthesizes literature reviews with a **Deterministic Token-Level Grounding Guardrail** ($\ge 35\%$ overlap gate) to eliminate factual drift and LLM hallucinations.
+> **PaperPulse AI** is a local literature review and citation grounding assistant. It ingests scientific papers directly from the arXiv API, indexes 384-dimensional dense vector embeddings into a local **ChromaDB** HNSW vector store, models inter-paper relationships using a **NetworkX** similarity graph, and verifies synthesized statements against cited abstracts using a **Deterministic Token-Level Grounding Guardrail** ($\ge 35\%$ overlap threshold) to flag unsupported claims.
 
 ---
 
@@ -16,7 +16,7 @@
 > [!IMPORTANT]
 > **RESTRICTED NON-COMMERCIAL USE — INTERVIEWER & EVALUATOR REVIEW ONLY**
 > 
-> This repository and its underlying source code, system architectures, database schemas, and mathematical verification algorithms are made available **strictly for review, inspection, and technical audit by interviewers, hiring managers, and academic evaluators**.
+> This repository and its underlying source code, system architectures, database schemas, and verification algorithms are provided **strictly for review, inspection, and technical audit by interviewers, hiring managers, and academic evaluators**.
 > 
 > - **Commercial usage, commercial redistribution, SaaS hosting, or monetization of any part of this software is strictly prohibited.**
 > - **Automated scraping, bulk ingestion, or unauthorized republication of the embedded assets or architecture is disallowed.**
@@ -26,61 +26,90 @@
 
 ## 1. Problem Statement
 
-Standard Retrieval-Augmented Generation (Naive RAG) systems suffer from three critical architectural flaws when applied to scientific and academic literature:
+Standard Retrieval-Augmented Generation (Naive RAG) systems exhibit three recurring issues when used for academic and scientific synthesis:
 
-1. **Hallucination & Semantic Drift**: Traditional LLMs frequently generate persuasive citations to non-existent arXiv papers, invent plausible-sounding equations, or attribute findings to authors who never claimed them.
-2. **Context Fragmentation & Multi-Hop Blindspots**: Pure cosine similarity searches isolate individual sentence chunks without context. Cross-paper relationships (e.g. how *Self-RAG* contrasts with *GraphRAG* or *Naive RAG*) are lost when documents are retrieved as disconnected top-$k$ nearest neighbors.
-3. **Absence of Deterministic Attribution Guardrails**: Most generative research tools rely entirely on stochastic model self-evaluation. There is no mathematical verification layer auditing whether a synthesized assertion is actually grounded verbatim in the cited peer-reviewed chunk.
+1. **Hallucination & Citation Drift**: Generative language models can fabricate convincing citation markers (`[arXiv:...]`), attribute findings to the wrong paper, or extrapolate beyond the empirical findings reported in the source text.
+2. **Context Fragmentation & Multi-Hop Blindspots**: Pure top-$k$ cosine vector retrieval treats documents as isolated points. Relevant papers that use slightly different phrasing or address complementary sides of an algorithm can be missed by direct semantic search alone.
+3. **Stochastic Verification**: Most generative assistants rely on an LLM to evaluate another LLM's output. Without an external, deterministic auditing step, there is no mathematical verification of whether a cited claim is backed by the retrieved text.
 
 ---
 
-## 2. Architectural Solution
+## 2. System Architecture
 
-PaperPulse AI resolves these limitations through a hybrid **Dense Vector + Graph Topology + Deterministic Attribution Pipeline**:
+PaperPulse AI addresses these problems by combining **Dense Vector Retrieval**, **Graph Topology Traversal**, and a **Deterministic Token-Level Grounding Guardrail**:
 
 ```mermaid
 flowchart TD
-    subgraph Ingestion ["1. Automated arXiv Ingestion Pipeline"]
-        A["arXiv REST API"] -->|"Fetch XML Metadata & Abstract"| B["Semantic Chunking & Cleaning"]
-        B -->|"1,536-dim Embeddings"| C[("ChromaDB HNSW Vector Core")]
+    subgraph Ingestion ["1. arXiv Ingestion Pipeline"]
+        A["arXiv REST API"] -->|"Fetch XML Metadata & Abstract"| B["Format Document (Title + Abstract)"]
+        B -->|"384-dim Embeddings (all-MiniLM-L6-v2)"| C[("ChromaDB HNSW Vector Core")]
     end
 
-    subgraph Topology ["2. NetworkX Topological Expansion"]
-        C -->|"HNSW Cosine sim >= 0.70"| D["Adjacency Matrix Builder"]
-        D -->|"Cosine Cos-sim Thresholding"| E["NetworkX Graph Engine"]
-        E -->|"Community Partitioning"| F["Thematic Research Clusters"]
+    subgraph Topology ["2. NetworkX Similarity Graph"]
+        C -->|"Pairwise Cosine Sim >= 0.40"| D["Adjacency Matrix Calculation"]
+        D --> E["NetworkX Undirected Graph"]
+        E -->|"Greedy Modularity"| F["Research Communities / Clusters"]
     end
 
-    subgraph Synthesis ["3. Hybrid Retrieval & Deterministic Guardrail"]
-        G["User Research Objective"] -->|"Vector Query (k=3-8)"| C
-        C -->|"Top-k Seed Chunks"| H["1-Hop Neighbor Expansion (NetworkX)"]
-        H -->|"Expanded Evidence Context"| I["Ollama / LLM Synthesis Engine"]
-        I -->|"Draft Synthesis with [arXiv:ID] Tags"| J{"Deterministic Grounding Guardrail"}
-        J -->|"Token Overlap >= 35%"| K["Verified Grounded Citation ✓"]
-        J -->|"Token Overlap < 35%"| L["Flagged Hallucination Risk ⚠"]
+    subgraph Synthesis ["3. Hybrid Retrieval & Grounding Verifier"]
+        G["User Research Query"] -->|"Vector Search (k=3-8)"| C
+        C -->|"Top-k Seed Papers"| H["1-Hop Neighbor Expansion (NetworkX)"]
+        H -->|"Expanded Context Papers"| I["Synthesis Engine (Ollama / Fallback)"]
+        I -->|"Draft Review with [arXiv:ID] Citations"| J{"Deterministic Grounding Guardrail"}
+        J -->|"Content Token Overlap >= 35%"| K["Verified Grounded Citation ✓"]
+        J -->|"Content Token Overlap < 35%"| L["Flagged Hallucination Risk ⚠"]
     end
 
-    subgraph Presentation ["4. Cyber-Academic Interface"]
-        K & L --> M["Editorial Academic Synthesis Dossier"]
-        E --> N["60 FPS Visual Embedding Map (Canvas)"]
+    subgraph Interface ["4. User Interface"]
+        K & L --> M["Synthesis & Grounding Dossier"]
+        E --> N["Interactive Canvas Graph Visualizer"]
         C --> O["Tabular ChromaDB Vector Catalog"]
         J --> P["Grounding Verification Chatbot Sandbox"]
     end
 ```
 
-### Core Innovations
+---
 
-- **1,536-Dim HNSW Vector Retrieval**: High-recall dense vector indexing with fast cosine distance querying.
-- **Topological 1-Hop Neighbor Expansion**: Graph traversal via NetworkX bridges semantic gaps between direct vector hits and adjacent foundational literature.
-- **Deterministic Token-Level Overlap Guardrail**: A mathematical attribution verifier calculates exact n-gram token overlap between generated assertions and source chunks. Sentences with $<35\%$ token attribution are flagged as hallucination risks.
-- **Dual-Mode 60 FPS Visual Constellation**: An HTML5 Canvas topological visualizer featuring:
-  - **Physics ON**: Dynamic force-directed constellation (aspect-ratio-calibrated magnetic repulsion + Hooke's spring forces) with real-time flowing photon particle pulses.
-  - **Classified Boxes (Physics OFF)**: Cards smoothly ease into 4 structured domain columns (*Multi-Agent*, *GraphRAG*, *Dense Vectors*, *Context Tuning*), returning smoothly to constellation coordinates when toggled back.
-- **Dedicated Grounding Verification Chatbot**: A dedicated conversational sandbox allowing users to audit arbitrary hypotheses, test preset hallucinated/grounded claims, and inspect exact matching token substrings.
+## 3. Core Technical Subsystems & Defensibility
+
+### A. Deterministic Token-Level Grounding Guardrail
+The verification logic (`services/citation_verifier.py`) audits every synthesized claim that contains an `[arXiv:ID]` tag against the corresponding stored abstract chunk without relying on another model call:
+
+1. **Citation Extraction**: Identifies all citation tags matching regex pattern `r'\[arXiv:([0-9]{4}\.[0-9]{4,5}|[a-zA-Z\-]+/[0-9]{7}|[0-9]{7})\]'`.
+2. **Claim Tokenization & Filtering**:
+   - Strips citation tags and lowercases the sentence.
+   - Cleans punctuation characters: `.,():;"`'[]{}?!`.
+   - Filters out a fixed list of 39 English stopwords (e.g. *the, a, is, in, of, and, with, this, that*).
+   - Excludes tokens $\le 3$ characters in length to retain only substantive terms (**content tokens**).
+3. **Source Chunk Tokenization**:
+   - Lowercases the retrieved paper's title and abstract.
+   - Strips punctuation and removes the same stopword set.
+4. **Precision Overlap Calculation**:
+   $$\text{Overlap Ratio } R = \frac{|T_{\text{claim}} \cap T_{\text{chunk}}|}{|T_{\text{claim}}|}$$
+5. **Deterministic Threshold Gate**:
+   - If $R \ge 0.35$ (35%), the claim is marked **verified grounded**.
+   - If $R < 0.35$, the claim is flagged as an **unsupported / hallucination risk**.
+   - If the claim contains no heavy content words (e.g. short transitional sentences), it passes with $R = 1.0$.
+
+### B. NetworkX Topological 1-Hop Neighbor Expansion
+Standard dense retrieval queries can miss complementary literature when the query vocabulary does not align with the paper's specific terminology. The graph engine (`services/graph_service.py`) mitigates this:
+
+1. **Graph Construction**: Extracts all stored embeddings from ChromaDB, normalizes them to unit vectors ($L_2$ norm), and calculates the pairwise cosine similarity matrix:
+   $$S_{ij} = \frac{\mathbf{u}_i \cdot \mathbf{u}_j}{\|\mathbf{u}_i\|_2 \|\mathbf{u}_j\|_2}$$
+2. **Thresholded Adjacency**: Adds an undirected edge between Paper $i$ and Paper $j$ if $S_{ij} \ge 0.40$.
+3. **Neighbor Traversal**: When top-$k$ direct vector matches are retrieved from ChromaDB, the engine checks their graph neighbors in NetworkX, sorts them descending by edge weight (similarity), and injects up to 2 high-similarity neighbors per seed paper into the synthesis context.
+4. **Community Partitioning**: Runs Clauset-Newman-Moore greedy modularity maximization (`nx.community.greedy_modularity_communities`) to assign papers into coherent research clusters.
+
+### C. Three-Tier Synthesis Architecture & Offline Fallback
+The synthesis orchestrator (`services/rag_service.py`) handles model connectivity gracefully:
+
+- **Tier 1 (Local Ollama)**: Queries a locally hosted model (`qwen2.5-coder:3b` or `1.5b`) over HTTP at `http://127.0.0.1:11434/api/generate` with strict grounding instructions and low temperature (0.2).
+- **Tier 2 (OpenRouter API)**: If Ollama is unreachable and an `OPENROUTER_API_KEY` is provided, requests completion from OpenRouter.
+- **Tier 3 (Deterministic Template Fallback)**: If no LLM endpoint is reachable, the engine constructs a structured synthesis by extracting core lead sentences directly from the retrieved abstracts and formatting them with exact citations. This guarantees that the application runs locally, offline, and without failure even when Ollama is not running.
 
 ---
 
-## 3. Detailed Data Flow Sequence
+## 4. End-to-End Data Flow Sequence
 
 ```mermaid
 sequenceDiagram
@@ -90,65 +119,48 @@ sequenceDiagram
     participant API as FastAPI Backend (:8000)
     participant Chroma as ChromaDB Vector Store
     participant Graph as NetworkX Graph Engine
-    participant Guardrail as Deterministic Grounding Verifier
-    participant LLM as Ollama (qwen2.5-coder:1.5b)
+    participant Guardrail as Deterministic Citation Verifier
+    participant LLM as Ollama / Offline Fallback
 
-    User->>UI: Submit Research Query & Top-k Parameter
-    UI->>API: POST /api/query { question, top_k, expand_neighbors }
-    API->>Chroma: Vector Similarity Search (HNSW Cosine)
-    Chroma-->>API: Top-k Relevant Paper Chunks
+    User->>UI: Submit Research Query (e.g. "Multi-Agent Consensus")
+    UI->>API: POST /api/query { question, top_k: 4, expand_neighbors: true }
+    API->>Chroma: Query 384-dim HNSW Cosine Index
+    Chroma-->>API: Top-k Relevant Abstract Chunks
     
     alt 1-Hop Neighbor Expansion Enabled
-        API->>Graph: Query 1-Hop Neighbors for Retrieved Nodes
-        Graph-->>API: Topological Neighbor Nodes & Similarity Edges
+        API->>Graph: Traverse Graph Neighbors for Retrieved Seeds
+        Graph-->>API: Expanded Topological Neighbor Papers & Edge Weights
     end
 
-    API->>LLM: Prompt with Structured Literature Context
-    LLM-->>API: Synthesized Response with [arXiv:ID] Badges
+    API->>LLM: Prompt with Structured Abstracts & Citation Constraints
+    LLM-->>API: Response with [arXiv:ID] Tags (or Deterministic Fallback)
     
-    loop For Each Synthesized Claim
-        API->>Guardrail: Calculate N-Gram Overlap Score against Chunk
+    loop For Each Cited Claim
+        API->>Guardrail: Calculate Token Overlap against Abstract Chunk
         Guardrail-->>API: Overlap Ratio & Matching Token Substrings
     end
 
-    API-->>UI: Return Verified Synthesis, Factual Spectrum & Graph Topography
-    UI-->>User: Display Dossier, 60 FPS Visual Map & Verification Status
-```
-
----
-
-## 4. Grounding Guardrail Logic
-
-```mermaid
-flowchart LR
-    A["Generated Sentence S"] --> C["Text Normalization & Stopword Elimination"]
-    B["Source Abstract Chunk C"] --> C
-    C --> D["Extract Content Token Sets T(S) and T(C)"]
-    D --> E["Intersection: M = T(S) ∩ T(C)"]
-    E --> F["Overlap Ratio: R = |M| / |T(S)|"]
-    F --> G{"R >= 35%?"}
-    G -->|"Yes (>= 35%)"| H["✓ Pass Guardrail: Verified Grounded Claim"]
-    G -->|"No (< 35%)"| I["⚠ Flag Guardrail: Potential Hallucination Risk"]
+    API-->>UI: Return Verified Synthesis, Overlap Breakdown & Graph Topography
+    UI-->>User: Display Results, Interactive Canvas & Verification Status
 ```
 
 ---
 
 ## 5. Technology Stack
 
-### Backend Engine
-- **Framework**: [FastAPI 0.110](https://fastapi.tiangolo.com/) (Asynchronous REST API, Pydantic v2 schemas)
-- **Vector Core**: [ChromaDB](https://www.trychroma.com/) with Persistent DuckDB/SQLite local storage & HNSW cosine index
-- **Graph Topology**: [NetworkX 3.2](https://networkx.org/) (Graph modeling, adjacency matrices, community clustering)
-- **Embeddings**: `sentence-transformers` (`all-MiniLM-L6-v2`) / fast fallback 1,536-dim semantic projection
-- **Inference**: [Ollama](https://ollama.com/) local models (`qwen2.5-coder:1.5b`, `llama3`, `mistral`) with deterministic template fallback
-- **Server**: Uvicorn with ASGI event loop
+### Backend
+- **Framework**: [FastAPI 0.110](https://fastapi.tiangolo.com/) (Asynchronous Python API with Pydantic v2 schemas)
+- **Vector Database**: [ChromaDB](https://www.trychroma.com/) (Local persistent HNSW index with cosine distance)
+- **Embedding Model**: `sentence-transformers` (`all-MiniLM-L6-v2`, 384-dimensional dense vectors)
+- **Graph Topology**: [NetworkX 3.2](https://networkx.org/) (Cosine similarity graph, adjacency matrices, community detection)
+- **Inference**: [Ollama](https://ollama.com/) local models (`qwen2.5-coder:3b` / `1.5b`) with deterministic sentence-extraction fallback
+- **Server**: Uvicorn ASGI server
 
-### Frontend Application
-- **Framework**: [Next.js 14.2](https://nextjs.org/) (React 18, App Router, Server/Client components)
-- **Language**: TypeScript 5.4 (Strict type checking, zero `any` leaks)
-- **Styling**: Tailwind CSS 3.4 with custom `@tailwindcss/typography` & Cyber-Academic theme
-- **Visualization**: Custom HTML5 Canvas engine (Pre-rendered sprite caching, 60 FPS requestAnimationFrame loop, soft elliptical magnetic collision physics)
-- **Iconography**: Lucide React
+### Frontend
+- **Framework**: [Next.js 14.2](https://nextjs.org/) (React 18, App Router, TypeScript)
+- **Styling**: Tailwind CSS 3.4
+- **Visualization**: Custom HTML5 Canvas engine with pre-rendered offscreen particle sprites and soft elliptical collision physics
+- **Icons**: Lucide React
 
 ---
 
@@ -157,51 +169,49 @@ flowchart LR
 ```
 paperpulse-ai/
 ├── backend/
-│   ├── main.py                 # FastAPI application routes & orchestration
-│   ├── config.py               # Application settings & environment configuration
+│   ├── main.py                     # FastAPI application routes & endpoints
+│   ├── config.py                   # Environment settings & retrieval thresholds
 │   ├── services/
-│   │   ├── arxiv_service.py    # arXiv API ingestion & metadata parser
-│   │   ├── chroma_service.py   # ChromaDB HNSW vector core management
-│   │   ├── graph_service.py    # NetworkX topological neighbor expansion
-│   │   ├── llm_service.py      # Ollama client & structured prompting
-│   │   └── verifier_service.py # Deterministic token overlap guardrail
+│   │   ├── arxiv_service.py        # arXiv REST API ingestion & XML parsing
+│   │   ├── vector_store.py         # ChromaDB 384-dim HNSW vector core management
+│   │   ├── graph_service.py        # NetworkX similarity graph & neighbor expansion
+│   │   ├── citation_verifier.py    # Deterministic token-level overlap guardrail
+│   │   └── rag_service.py          # Synthesis orchestration & offline fallback
 │   ├── models/
-│   │   └── schemas.py          # Pydantic request/response data models
-│   ├── tests/                  # Pytest verification suites
-│   ├── requirements.txt        # Python dependency manifest
-│   └── Dockerfile              # Backend container definition
+│   │   └── schemas.py              # Pydantic request/response models
+│   ├── tests/                      # Pytest unit & integration test suites
+│   ├── requirements.txt            # Python dependencies
+│   └── Dockerfile                  # Backend container configuration
 ├── frontend/
 │   ├── app/
-│   │   ├── layout.tsx          # Root layout & font configuration
-│   │   ├── page.tsx            # Main tabbed dashboard application
-│   │   └── globals.css         # Global Tailwind & aesthetic styles
+│   │   ├── layout.tsx              # Root HTML layout & metadata
+│   │   ├── page.tsx                # Main dashboard container & tab navigation
+│   │   └── globals.css             # Tailwind style imports
 │   ├── components/
-│   │   ├── StatsHeader.tsx     # Compact zero-overflow telemetry brand header
-│   │   ├── SearchBar.tsx       # Single commanding search bar & arXiv ingest modal
-│   │   ├── CitationGraph.tsx   # 60 FPS HTML5 Canvas constellation & box classifier
-│   │   ├── AnswerCard.tsx      # Editorial synthesis dossier & factual spectrum bar
-│   │   ├── VerificationChatbot.tsx # Grounding verification chatbot sandbox
-│   │   └── EvidenceDrawer.tsx  # Slide-over source paper & token inspector
+│   │   ├── StatsHeader.tsx         # Telemetry header & system status
+│   │   ├── SearchBar.tsx           # Search input bar & arXiv ingestion modal
+│   │   ├── CitationGraph.tsx       # HTML5 Canvas graph visualizer & box classifier
+│   │   ├── AnswerCard.tsx          # Synthesis dossier & factual overlap breakdown
+│   │   ├── VerificationChatbot.tsx # Interactive grounding verification sandbox
+│   │   └── EvidenceDrawer.tsx      # Slide-over source paper & token inspector
 │   ├── public/
-│   │   └── logo.png            # PaperPulse AI official branding logo
-│   ├── tailwind.config.js      # Design tokens, fonts, and animation configuration
-│   └── package.json            # Node.js dependencies & scripts
-├── screenshots/                # Verified high-resolution UI screen captures
-│   ├── visual_map_calibrated_smooth.png
-│   ├── verification_chatbot_fixed.png
-│   └── simplified_catalog.png
-└── README.md                   # System documentation & architectural review
+│   │   └── logo.png                # Application logo
+│   ├── tailwind.config.js          # Tailwind theme & color definitions
+│   └── package.json                # Frontend dependencies & npm scripts
+├── screenshots/                    # UI verification screen captures
+├── LICENSE                         # Non-commercial evaluator license
+└── README.md                       # Architecture & documentation
 ```
 
 ---
 
-## 7. Local Setup & Installation Guide
+## 7. Local Setup & Installation
 
 ### Prerequisites
-- **Python**: 3.10+ (with virtual environment support)
-- **Node.js**: v18.17+ or v20+ (with `npm`)
+- **Python**: 3.10+
+- **Node.js**: v18.17+ or v20+
 - **Git**
-- *(Optional)*: [Ollama](https://ollama.com/) running locally on port `11434` with model `qwen2.5-coder:1.5b` (`ollama run qwen2.5-coder:1.5b`). If Ollama is not running, PaperPulse AI operates with its deterministic grounding synthesis fallback.
+- *(Optional)*: [Ollama](https://ollama.com/) running locally with `qwen2.5-coder:3b` (`ollama run qwen2.5-coder:3b`). If Ollama is not installed or running, the system automatically uses its deterministic offline synthesis fallback.
 
 ---
 
@@ -234,13 +244,13 @@ pip install -r requirements.txt
 python -m uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-Verify backend health by navigating to `http://127.0.0.1:8000/api/health`.
+Verify backend health at `http://127.0.0.1:8000/api/health`.
 
 ---
 
 ### Step 3: Frontend Setup (Next.js 14)
 
-Open a new terminal window:
+Open a separate terminal:
 
 ```bash
 cd paperpulse-ai/frontend
@@ -261,16 +271,16 @@ Open your browser at **`http://localhost:3000`**.
 
 ---
 
-## 8. User Interface Tour
+## 8. Dashboard Views
 
-The PaperPulse AI interface is partitioned into four dedicated views:
+The application provides four dedicated tabs:
 
-1. **Vector Store Catalog (`catalog`)**: Tabular ledger of indexed arXiv vectors with search filters, domain tags (*Multi-Agent*, *GraphRAG*, *Dense Vectors*, *Context*), token chunk inspection, and direct arXiv PDF links.
-2. **Visual Embedding Map (`topology`)**: 60 FPS interactive HTML5 canvas displaying topological cosine similarity links ($> 0.70$).
-   - **Physics ON**: Aspect-ratio-calibrated magnetic repulsion + Hooke's spring forces with flowing photon particles along similarity edges.
-   - **Classified Boxes (Physics OFF)**: Cards smoothly glide into 4 structured domain columns, preserving their last active constellation positions when toggled back.
-3. **Synthesis & Grounding Dossier (`matrix`)**: Editorial research objective headline, Factual Grounding Spectrum breakdown, and verified cited passages with interactive `[arXiv:ID]` badges.
-4. **Grounding Verification Chatbot (`sandbox`)**: Real-time conversational claims auditor allowing researchers to test hypotheses, adjust the deterministic overlap threshold ($20\% - 60\%$), and inspect verified token substrings.
+1. **Vector Store Catalog (`catalog`)**: Tabular list of indexed arXiv vectors with search filtering, domain categorization (*Multi-Agent*, *GraphRAG*, *Dense Vectors*, *Context*), abstract inspection, and direct links to arXiv PDFs.
+2. **Visual Embedding Map (`topology`)**: Interactive HTML5 Canvas showing topological similarity relationships:
+   - **Physics ON**: Dynamic force-directed layout with soft magnetic repulsion and particle pulses along similarity edges.
+   - **Classified Boxes (Physics OFF)**: Cards ease into 4 categorized domain columns, smoothly returning to constellation positions when physics is re-enabled.
+3. **Synthesis & Grounding Dossier (`matrix`)**: Synthesized literature review with interactive `[arXiv:ID]` badges, individual citation verification status, and an overlap spectrum bar.
+4. **Grounding Verification Chatbot (`sandbox`)**: Interactive sandbox for testing arbitrary claims against indexed papers, adjusting the overlap threshold ($20\% - 60\%$), and highlighting matching token substrings.
 
 ---
 
