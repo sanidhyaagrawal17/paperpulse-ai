@@ -3,8 +3,9 @@
 [![License: Non-Commercial Review Only](https://img.shields.io/badge/License-Evaluator_Review_Only-red.svg)](LICENSE)
 [![Next.js 14](https://img.shields.io/badge/Frontend-Next.js%2014%20App%20Router-black?logo=next.js)](https://nextjs.org/)
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI%200.110-009688?logo=fastapi)](https://fastapi.tiangolo.com/)
-[![ChromaDB](https://img.shields.io/badge/Vector_DB-ChromaDB%20HNSW-orange)](https://www.trychroma.com/)
-[![NetworkX](https://img.shields.io/badge/Graph_Topology-NetworkX-blue)](https://networkx.org/)
+[![ChromaDB](https://img.shields.io/badge/Vector_Core-ChromaDB%20(384--dim)-orange)](https://www.trychroma.com/)
+[![NetworkX](https://img.shields.io/badge/Graph_Topology-NetworkX%20(sim%20%3E%3D%200.40)-blue)](https://networkx.org/)
+[![Grounding](https://img.shields.io/badge/Grounding_Guardrail-35%25%20Overlap%20Gate-emerald)]()
 [![Status](https://img.shields.io/badge/Build-Passing-brightgreen)]()
 
 > **PaperPulse AI** is a local literature review and citation grounding assistant. It ingests scientific papers directly from the arXiv API, indexes 384-dimensional dense vector embeddings into a local **ChromaDB** HNSW vector store, models inter-paper relationships using a **NetworkX** similarity graph, and verifies synthesized statements against cited abstracts using a **Deterministic Token-Level Grounding Guardrail** ($\ge 35\%$ overlap threshold) to flag unsupported claims.
